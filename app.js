@@ -1,6 +1,7 @@
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 import { SUPABASE_URL, SUPABASE_ANON_KEY, MEMBERS } from './config.js';
 
+
 const app = document.getElementById('app');
 const sidePanel = document.getElementById('sidePanel');
 const backdrop = document.getElementById('backdrop');

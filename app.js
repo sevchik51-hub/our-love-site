@@ -130,13 +130,38 @@ function authorPill(item) {
   return item.author_name ? `<span class="pill author-pill">${escapeHtml(item.author_name)}</span>` : '';
 }
 
-function formBlock(title, body) {
-  return `<section class="card form-card"><div class="section-head" style="margin:0 0 12px"><div><span class="eyebrow">ДОБАВИТЬ</span><h2 style="margin:4px 0 0;font-family:'Playfair Display',serif;font-size:25px">${escapeHtml(title)}</h2></div></div>${body}</section>`;
+function formBlock(title, body, buttonText = 'Добавить') {
+  return `<details class="card form-card collapsible-form">
+    <summary class="form-toggle">
+      <span>＋ ${escapeHtml(buttonText)}</span>
+      <span class="form-toggle-arrow">⌄</span>
+    </summary>
+    <div class="collapsible-form-body">
+      <div class="form-title-row">
+        <div><span class="eyebrow">ДОБАВИТЬ</span><h2>${escapeHtml(title)}</h2></div>
+      </div>
+      ${body}
+    </div>
+  </details>`;
 }
 
 function sectionHead(route) {
   const [eyebrow, title] = routeMeta[route];
-  return `<div class="section-head"><div><span class="eyebrow">${escapeHtml(eyebrow)}</span><h1>${escapeHtml(title)}</h1></div><div class="muted" style="font-size:12px">${state.currentUser ? 'режим редактирования' : 'режим просмотра'}</div></div>`;
+  return `<div class="section-head">
+    <div>
+      <span class="eyebrow">${escapeHtml(eyebrow)}</span>
+      <h1>${escapeHtml(title)}</h1>
+    </div>
+    <div class="section-head-art" aria-hidden="true">
+      <svg viewBox="0 0 180 80" role="presentation">
+        <path d="M8 68 C42 62, 48 31, 86 37 C116 42, 128 13, 174 18" />
+        <path d="M48 47 C39 35, 30 34, 24 40 C31 47, 39 50, 48 47Z" />
+        <path d="M84 37 C76 24, 65 23, 59 30 C67 38, 75 40, 84 37Z" />
+        <path d="M119 31 C126 18, 138 17, 145 24 C137 33, 128 35, 119 31Z" />
+        <path d="M151 21 C157 10, 168 8, 175 15 C169 24, 160 27, 151 21Z" />
+      </svg>
+    </div>
+  </div>`;
 }
 
 function renderHome() {
@@ -150,7 +175,7 @@ function renderHome() {
   return `
     <section class="hero">
       <span class="eyebrow">НАША МАЛЕНЬКАЯ ВСЕЛЕННАЯ</span>
-      <h1>Привет, двое ♡</h1>
+      <h1>${state.currentUser ? `Привет, ${escapeHtml(state.currentUser.display)} ♡` : 'Привет ♡'}</h1>
       <p>Здесь можно хранить всё, что обычно теряется в переписке: планы, хотелки, любимые места, локальные шутки и даты, которые хочется помнить.</p>
     </section>
 
@@ -195,44 +220,44 @@ function renderHome() {
 }
 
 function renderWishes() {
-  const body = `<div class="form-grid"><div><label class="field-label">Что хочется сделать?</label><input id="wishText" class="field-input" placeholder="Например: съездить на море на выходные" /></div><div class="form-actions"><button class="primary-btn" data-action="add-wish">Добавить хотелку</button></div></div>`;
-  return `${sectionHead('wishes')}${state.currentUser ? formBlock('Новая хотелка', body) : ''}<div class="list">${state.data.wishes.length ? state.data.wishes.map(item => `<div class="item-card ${item.done ? 'done' : ''}"><div class="item-main"><h3>${escapeHtml(item.text)}</h3><div class="meta"><span class="pill">${item.done ? 'выполнено' : 'в планах'}</span>${authorPill(item)}<span>${fmtShort(item.created_at)}</span></div></div><div class="item-actions">${state.currentUser ? `<button class="small-btn" data-action="toggle-wish" data-id="${item.id}">${item.done ? 'Вернуть' : 'Готово'}</button><button class="small-btn danger" data-action="delete" data-table="wishes" data-id="${item.id}">×</button>` : ''}</div></div>`).join('') : '<div class="empty">Пока ни одной хотелки.</div>'}</div>`;
+  const body = `<div class="form-grid"><div><label class="field-label">Что хочется сделать?</label><textarea id="wishText" class="field-textarea" rows="4" placeholder="Например: съездить на море на выходные"></textarea></div><div class="form-actions"><button class="primary-btn" data-action="add-wish">Добавить хотелку</button></div></div>`;
+  return `${sectionHead('wishes')}${state.currentUser ? formBlock('Новая хотелка', body, 'Добавить хотелку') : ''}<div class="list">${state.data.wishes.length ? state.data.wishes.map(item => `<div class="item-card ${item.done ? 'done' : ''}"><div class="item-main"><h3>${escapeHtml(item.text)}</h3><div class="meta"><span class="pill">${item.done ? 'выполнено' : 'в планах'}</span>${authorPill(item)}<span>${fmtShort(item.created_at)}</span></div></div><div class="item-actions">${state.currentUser ? `<button class="small-btn" data-action="toggle-wish" data-id="${item.id}">${item.done ? 'Вернуть' : 'Готово'}</button><button class="small-btn danger" data-action="delete" data-table="wishes" data-id="${item.id}">×</button>` : ''}</div></div>`).join('') : '<div class="empty">Пока ни одной хотелки.</div>'}</div>`;
 }
 
 function renderPlaces() {
-  const body = `<div class="form-grid"><div><label class="field-label">Название места</label><input id="placeTitle" class="field-input" placeholder="Например: маленькая кофейня в центре" /></div><div class="form-grid two"><div><label class="field-label">Дата и время</label><input id="placeAt" class="field-input" type="datetime-local" /></div><div><label class="field-label">Заметка</label><input id="placeNote" class="field-input" placeholder="Что хотим там сделать" /></div></div><div class="form-actions"><button class="primary-btn" data-action="add-place">Добавить план</button></div></div>`;
-  return `${sectionHead('places')}${state.currentUser ? formBlock('Новое место', body) : ''}<div class="list">${state.data.places.length ? state.data.places.map(item => `<div class="item-card"><div class="item-main"><h3>${escapeHtml(item.title)}</h3><p>${escapeHtml(item.note || 'Без заметки')}</p><div class="meta"><span class="pill">${fmtDate(item.event_at)}</span>${authorPill(item)}</div></div>${state.currentUser ? `<button class="small-btn danger" data-action="delete" data-table="places" data-id="${item.id}">×</button>` : ''}</div>`).join('') : '<div class="empty">Пока нет запланированных мест.</div>'}</div>`;
+  const body = `<div class="form-grid"><div><label class="field-label">Название места</label><input id="placeTitle" class="field-input" placeholder="Например: маленькая кофейня в центре" /></div><div class="form-grid two"><div><label class="field-label">Дата и время</label><input id="placeAt" class="field-input" type="datetime-local" /></div><div><label class="field-label">Заметка</label><textarea id="placeNote" class="field-textarea" rows="3" placeholder="Что хотим там сделать"></textarea></div></div><div class="form-actions"><button class="primary-btn" data-action="add-place">Добавить план</button></div></div>`;
+  return `${sectionHead('places')}${state.currentUser ? formBlock('Новое место', body, 'Добавить план') : ''}<div class="list">${state.data.places.length ? state.data.places.map(item => `<div class="item-card"><div class="item-main"><h3>${escapeHtml(item.title)}</h3><p>${escapeHtml(item.note || 'Без заметки')}</p><div class="meta"><span class="pill">${fmtDate(item.event_at)}</span>${authorPill(item)}</div></div>${state.currentUser ? `<button class="small-btn danger" data-action="delete" data-table="places" data-id="${item.id}">×</button>` : ''}</div>`).join('') : '<div class="empty">Пока нет запланированных мест.</div>'}</div>`;
 }
 
 function renderReviews() {
-  const body = `<div class="form-grid"><div><label class="field-label">Ресторан или кафе</label><input id="reviewPlace" class="field-input" placeholder="Например: название места" /></div><div class="form-grid two"><div><label class="field-label">Оценка 1–10</label><input id="reviewRating" class="field-input" type="number" min="1" max="10" value="10" /></div><div><label class="field-label">Комментарий</label><input id="reviewComment" class="field-input" placeholder="Что понравилось / не понравилось" /></div></div><div class="form-actions"><button class="primary-btn" data-action="add-review">Добавить отзыв</button></div></div>`;
+  const body = `<div class="form-grid"><div><label class="field-label">Ресторан или кафе</label><input id="reviewPlace" class="field-input" placeholder="Например: название места" /></div><div class="form-grid two"><div><label class="field-label">Оценка 1–10</label><input id="reviewRating" class="field-input" type="number" min="1" max="10" value="10" /></div><div><label class="field-label">Комментарий</label><textarea id="reviewComment" class="field-textarea" rows="4" placeholder="Что понравилось / не понравилось"></textarea></div></div><div class="form-actions"><button class="primary-btn" data-action="add-review">Добавить отзыв</button></div></div>`;
   const sorted = [...state.data.reviews].sort((a,b) => b.rating-a.rating);
-  return `${sectionHead('reviews')}${state.currentUser ? formBlock('Новый отзыв', body) : ''}<div class="list">${sorted.length ? sorted.map(item => `<div class="item-card"><div class="item-main"><h3>${escapeHtml(item.place_name)}</h3><div class="rating">${'★'.repeat(item.rating)}${'☆'.repeat(10-item.rating)}</div><p>${escapeHtml(item.comment || 'Без комментария')}</p><div class="meta">${authorPill(item)}<span>${fmtShort(item.created_at)}</span></div></div><div class="pill">${item.rating}/10</div></div>`).join('') : '<div class="empty">Пока никто не оценил ни одного места.</div>'}</div>`;
+  return `${sectionHead('reviews')}${state.currentUser ? formBlock('Новый отзыв', body, 'Добавить отзыв') : ''}<div class="list">${sorted.length ? sorted.map(item => `<div class="item-card"><div class="item-main"><h3>${escapeHtml(item.place_name)}</h3><div class="rating">${'★'.repeat(item.rating)}${'☆'.repeat(10-item.rating)}</div><p>${escapeHtml(item.comment || 'Без комментария')}</p><div class="meta">${authorPill(item)}<span>${fmtShort(item.created_at)}</span></div></div><div class="pill">${item.rating}/10</div></div>`).join('') : '<div class="empty">Пока никто не оценил ни одного места.</div>'}</div>`;
 }
 
 function renderMoments() {
   const body = `<div class="form-grid"><div><label class="field-label">Что произошло?</label><input id="momentTitle" class="field-input" placeholder="Например: тот самый поход за мороженым" /></div><div><label class="field-label">История</label><textarea id="momentText" class="field-textarea" placeholder="Запишите, что было смешного..."></textarea></div><div class="form-grid two"><div><label class="field-label">Дата и время</label><input id="momentAt" class="field-input" type="datetime-local" /></div><div class="form-actions"><button class="primary-btn" data-action="add-moment">Сохранить момент</button></div></div></div>`;
-  return `${sectionHead('moments')}${state.currentUser ? formBlock('Новый момент', body) : ''}<div class="list">${state.data.moments.length ? state.data.moments.map(item => `<div class="item-card"><div class="item-main"><h3>${escapeHtml(item.title)}</h3><p>${escapeHtml(item.text)}</p><div class="meta"><span class="pill">${fmtShort(item.happened_at)}</span>${authorPill(item)}</div></div>${state.currentUser ? `<button class="small-btn danger" data-action="delete" data-table="moments" data-id="${item.id}">×</button>` : ''}</div>`).join('') : '<div class="empty">Пока нет смешных моментов. Это подозрительно.</div>'}</div>`;
+  return `${sectionHead('moments')}${state.currentUser ? formBlock('Новый момент', body, 'Добавить момент') : ''}<div class="list">${state.data.moments.length ? state.data.moments.map(item => `<div class="item-card"><div class="item-main"><h3>${escapeHtml(item.title)}</h3><p>${escapeHtml(item.text)}</p><div class="meta"><span class="pill">${fmtShort(item.happened_at)}</span>${authorPill(item)}</div></div>${state.currentUser ? `<button class="small-btn danger" data-action="delete" data-table="moments" data-id="${item.id}">×</button>` : ''}</div>`).join('') : '<div class="empty">Пока нет смешных моментов. Это подозрительно.</div>'}</div>`;
 }
 
 function renderFriends() {
   const body = `<div class="form-grid"><div><label class="field-label">С кем встретились?</label><input id="friendName" class="field-input" placeholder="Например: Саша и Катя" /></div><div class="form-grid two"><div><label class="field-label">Дата и время</label><input id="friendAt" class="field-input" type="datetime-local" /></div><div><label class="field-label">Заметка</label><input id="friendNote" class="field-input" placeholder="Где были / что делали" /></div></div><div class="form-actions"><button class="primary-btn" data-action="add-friend">Сохранить встречу</button></div></div>`;
-  return `${sectionHead('friends')}${state.currentUser ? formBlock('Новая встреча', body) : ''}<div class="list">${state.data.friends.length ? state.data.friends.map(item => `<div class="item-card"><div class="item-main"><h3>${escapeHtml(item.friends_name)}</h3><p>${escapeHtml(item.note || '')}</p><div class="meta"><span class="pill">${fmtDate(item.happened_at)}</span>${authorPill(item)}</div></div>${state.currentUser ? `<button class="small-btn danger" data-action="delete" data-table="friends" data-id="${item.id}">×</button>` : ''}</div>`).join('') : '<div class="empty">Пока нет записей о встречах.</div>'}</div>`;
+  return `${sectionHead('friends')}${state.currentUser ? formBlock('Новая встреча', body, 'Добавить встречу') : ''}<div class="list">${state.data.friends.length ? state.data.friends.map(item => `<div class="item-card"><div class="item-main"><h3>${escapeHtml(item.friends_name)}</h3><p>${escapeHtml(item.note || '')}</p><div class="meta"><span class="pill">${fmtDate(item.happened_at)}</span>${authorPill(item)}</div></div>${state.currentUser ? `<button class="small-btn danger" data-action="delete" data-table="friends" data-id="${item.id}">×</button>` : ''}</div>`).join('') : '<div class="empty">Пока нет записей о встречах.</div>'}</div>`;
 }
 
 function renderDates() {
   const body = `<div class="form-grid"><div><label class="field-label">Идея для свидания</label><input id="dateTitle" class="field-input" placeholder="Например: пикник на закате" /></div><div><label class="field-label">Описание</label><textarea id="dateText" class="field-textarea" placeholder="Почему хотим это сделать..."></textarea></div><div class="form-actions"><button class="primary-btn" data-action="add-date">Добавить идею</button></div></div>`;
-  return `${sectionHead('dates')}${state.currentUser ? formBlock('Новая идея', body) : ''}<div class="list">${state.data.dates.length ? state.data.dates.map(item => `<div class="item-card"><div class="item-main"><h3>${escapeHtml(item.title)}</h3><p>${escapeHtml(item.text || '')}</p><div class="meta">${authorPill(item)}<span>${fmtShort(item.created_at)}</span></div></div>${state.currentUser ? `<button class="small-btn danger" data-action="delete" data-table="dates" data-id="${item.id}">×</button>` : ''}</div>`).join('') : '<div class="empty">Сюда можно скидывать любые идеи для свиданий.</div>'}</div>`;
+  return `${sectionHead('dates')}${state.currentUser ? formBlock('Новая идея', body, 'Добавить идею') : ''}<div class="list">${state.data.dates.length ? state.data.dates.map(item => `<div class="item-card"><div class="item-main"><h3>${escapeHtml(item.title)}</h3><p>${escapeHtml(item.text || '')}</p><div class="meta">${authorPill(item)}<span>${fmtShort(item.created_at)}</span></div></div>${state.currentUser ? `<button class="small-btn danger" data-action="delete" data-table="dates" data-id="${item.id}">×</button>` : ''}</div>`).join('') : '<div class="empty">Сюда можно скидывать любые идеи для свиданий.</div>'}</div>`;
 }
 
 function renderQuotes() {
-  const body = `<div class="form-grid"><div><label class="field-label">Фраза / локальный мем</label><input id="quoteText" class="field-input" placeholder="Фраза, которую нельзя потерять" /></div><div class="form-actions"><button class="primary-btn" data-action="add-quote">Сохранить фразу</button></div></div>`;
-  return `${sectionHead('quotes')}${state.currentUser ? formBlock('Новая фраза', body) : ''}<div class="grid">${state.data.quotes.length ? state.data.quotes.map(item => `<div class="card quote-card"><div class="quote-text">“${escapeHtml(item.text)}”</div><div class="meta">${authorPill(item)}<span>${fmtShort(item.created_at)}</span></div>${state.currentUser ? `<div class="form-actions"><button class="small-btn danger" data-action="delete" data-table="quotes" data-id="${item.id}">Удалить</button></div>` : ''}</div>`).join('') : '<div class="empty">Пока нет фраз. Жизнь, судя по всему, слишком серьёзная.</div>'}</div>`;
+  const body = `<div class="form-grid"><div><label class="field-label">Фраза / локальный мем</label><textarea id="quoteText" class="field-textarea" rows="3" placeholder="Фраза, которую нельзя потерять"></textarea></div><div class="form-actions"><button class="primary-btn" data-action="add-quote">Сохранить фразу</button></div></div>`;
+  return `${sectionHead('quotes')}${state.currentUser ? formBlock('Новая фраза', body, 'Добавить фразу') : ''}<div class="grid">${state.data.quotes.length ? state.data.quotes.map(item => `<div class="card quote-card"><div class="quote-text">“${escapeHtml(item.text)}”</div><div class="meta">${authorPill(item)}<span>${fmtShort(item.created_at)}</span></div>${state.currentUser ? `<div class="form-actions"><button class="small-btn danger" data-action="delete" data-table="quotes" data-id="${item.id}">Удалить</button></div>` : ''}</div>`).join('') : '<div class="empty">Пока нет фраз. Жизнь, судя по всему, слишком серьёзная.</div>'}</div>`;
 }
 
 function renderGratitude() {
-  const body = `<div class="form-grid"><div><label class="field-label">Маленькая радость</label><input id="gratitudeText" class="field-input" placeholder="Что сегодня порадовало" /></div><div class="form-actions"><button class="primary-btn" data-action="add-gratitude">Записать</button></div></div>`;
-  return `${sectionHead('gratitude')}${state.currentUser ? formBlock('Небольшая запись', body) : ''}<div class="list">${state.data.gratitude.length ? state.data.gratitude.map(item => `<div class="item-card"><div class="item-main"><h3>✦ ${escapeHtml(item.text)}</h3><div class="meta">${authorPill(item)}<span>${fmtShort(item.created_at)}</span></div></div>${state.currentUser ? `<button class="small-btn danger" data-action="delete" data-table="gratitude" data-id="${item.id}">×</button>` : ''}</div>`).join('') : '<div class="empty">Можно записать любую мелочь, которая сделала день лучше.</div>'}</div>`;
+  const body = `<div class="form-grid"><div><label class="field-label">Маленькая радость</label><textarea id="gratitudeText" class="field-textarea" rows="3" placeholder="Что сегодня порадовало"></textarea></div><div class="form-actions"><button class="primary-btn" data-action="add-gratitude">Записать</button></div></div>`;
+  return `${sectionHead('gratitude')}${state.currentUser ? formBlock('Небольшая запись', body, 'Добавить радость') : ''}<div class="list">${state.data.gratitude.length ? state.data.gratitude.map(item => `<div class="item-card"><div class="item-main"><h3>✦ ${escapeHtml(item.text)}</h3><div class="meta">${authorPill(item)}<span>${fmtShort(item.created_at)}</span></div></div>${state.currentUser ? `<button class="small-btn danger" data-action="delete" data-table="gratitude" data-id="${item.id}">×</button>` : ''}</div>`).join('') : '<div class="empty">Можно записать любую мелочь, которая сделала день лучше.</div>'}</div>`;
 }
 
 function render() {
